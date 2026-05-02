@@ -54,7 +54,7 @@ mongoose
   .then(() => console.log('✅ MongoDB connected'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// ============ API ROUTES (BEFORE STATIC FILES - CRITICAL!) ============
+// ============ API ROUTES ============
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/snippets', snippetRoutes);
@@ -66,52 +66,68 @@ app.get('/api/test', (req, res) => {
   res.json({ success: true, message: 'API is working!', maxUploadSize: '500MB' });
 });
 
-// ============ STATIC FILES (AFTER API ROUTES) ============
-app.use(express.static(path.join(__dirname, '../frontend/pages')));
-app.use('/components', express.static(path.join(__dirname, '../frontend/components')));
-app.use('/css', express.static(path.join(__dirname, '../frontend/css')));
-app.use('/js', express.static(path.join(__dirname, '../frontend/js')));
-app.use('/assets', express.static(path.join(__dirname, '../frontend/assets')));
-app.use('/utils', express.static(path.join(__dirname, '../frontend/utils')));
-app.use('/layouts', express.static(path.join(__dirname, '../frontend/layouts')));
-
-// ============ HTML ROUTES ============
-app.get(['/', '/auth'], (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/auth.html'));
+// ============ SIMPLE ROOT ROUTE FOR HEALTH CHECK ============
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'CodeVaultX API is running!',
+    endpoints: {
+      test: '/api/test',
+      auth: '/api/auth',
+      user: '/api/user',
+      snippets: '/api/snippets',
+      folders: '/api/folders',
+      files: '/api/files',
+    },
+  });
 });
 
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/dashboard.html'));
-});
+// ============ STATIC FILES (COMMENTED OUT - FRONTEND HOSTED SEPARATELY ON NETLIFY) ============
+// app.use(express.static(path.join(__dirname, '../frontend/pages')));
+// app.use('/components', express.static(path.join(__dirname, '../frontend/components')));
+// app.use('/css', express.static(path.join(__dirname, '../frontend/css')));
+// app.use('/js', express.static(path.join(__dirname, '../frontend/js')));
+// app.use('/assets', express.static(path.join(__dirname, '../frontend/assets')));
+// app.use('/utils', express.static(path.join(__dirname, '../frontend/utils')));
+// app.use('/layouts', express.static(path.join(__dirname, '../frontend/layouts')));
 
-app.get('/editor', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/editor.html'));
-});
+// ============ HTML ROUTES (COMMENTED OUT - FRONTEND HOSTED SEPARATELY ON NETLIFY) ============
+// app.get(['/', '/auth'], (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/auth.html'));
+// });
 
-app.get('/languages', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/languages.html'));
-});
+// app.get('/dashboard', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/dashboard.html'));
+// });
 
-app.get('/readmode', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/readmode.html'));
-});
+// app.get('/editor', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/editor.html'));
+// });
 
-app.get('/upload', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/upload.html'));
-});
+// app.get('/languages', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/languages.html'));
+// });
 
-// ============ PASSWORD RESET & USERNAME RECOVERY ROUTES ============
-app.get('/forgot-password', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/forgot-password.html'));
-});
+// app.get('/readmode', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/readmode.html'));
+// });
 
-app.get('/reset-password', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/reset-password.html'));
-});
+// app.get('/upload', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/upload.html'));
+// });
 
-app.get('/forgot-username', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/forgot-username.html'));
-});
+// ============ PASSWORD RESET & USERNAME RECOVERY ROUTES (COMMENTED OUT) ============
+// app.get('/forgot-password', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/forgot-password.html'));
+// });
+
+// app.get('/reset-password', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/reset-password.html'));
+// });
+
+// app.get('/forgot-username', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/forgot-username.html'));
+// });
 
 // ============ ERROR HANDLER ============
 app.use((err, req, res, next) => {
@@ -150,11 +166,8 @@ app.use('/api/*', (req, res) => {
 // ============ START SERVER ============
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`\n🚀 CodeVaultX server running on http://localhost:${PORT}`);
-  console.log(`📁 API test: http://localhost:${PORT}/api/test`);
-  console.log(`📁 Upload page: http://localhost:${PORT}/upload`);
-  console.log(`📁 Files API: http://localhost:${PORT}/api/files`);
-  console.log(`📁 Max upload size: 500MB`);
-  console.log(`📁 Upload timeout: 30 minutes`);
-  console.log(`\n✅ All routes configured successfully!\n`);
+  console.log(`\n🚀 CodeVaultX API server running on port ${PORT}`);
+  console.log(`📁 API test: ${process.env.FRONTEND_URL || `http://localhost:${PORT}`}/api/test`);
+  console.log(`📁 API Base URL: ${process.env.FRONTEND_URL || `http://localhost:${PORT}`}`);
+  console.log(`\n✅ API routes configured successfully!\n`);
 });
