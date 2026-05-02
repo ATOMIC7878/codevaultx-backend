@@ -1,0 +1,130 @@
+{
+  "languages": [
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "extension": ".js",
+      "icon": "javascript.png",
+      "category": "programming"
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "extension": ".py",
+      "icon": "python.png",
+      "category": "programming"
+    },
+    {
+      "id": "java",
+      "name": "Java",
+      "extension": ".java",
+      "icon": "java.png",
+      "category": "programming"
+    },
+    {
+      "id": "cpp",
+      "name": "C++",
+      "extension": ".cpp",
+      "icon": "cpp.png",
+      "category": "programming"
+    },
+    {
+      "id": "csharp",
+      "name": "C#",
+      "extension": ".cs",
+      "icon": "csharp.png",
+      "category": "programming"
+    },
+    { "id": "go", "name": "Go", "extension": ".go", "icon": "go.png", "category": "programming" },
+    {
+      "id": "rust",
+      "name": "Rust",
+      "extension": ".rs",
+      "icon": "rust.png",
+      "category": "programming"
+    },
+    {
+      "id": "php",
+      "name": "PHP",
+      "extension": ".php",
+      "icon": "php.png",
+      "category": "programming"
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "extension": ".rb",
+      "icon": "ruby.png",
+      "category": "programming"
+    },
+    {
+      "id": "swift",
+      "name": "Swift",
+      "extension": ".swift",
+      "icon": "swift.png",
+      "category": "programming"
+    },
+    {
+      "id": "kotlin",
+      "name": "Kotlin",
+      "extension": ".kt",
+      "icon": "kotlin.png",
+      "category": "programming"
+    },
+    {
+      "id": "typescript",
+      "name": "TypeScript",
+      "extension": ".ts",
+      "icon": "typescript.png",
+      "category": "programming"
+    },
+    { "id": "html", "name": "HTML", "extension": ".html", "icon": "html.png", "category": "web" },
+    { "id": "css", "name": "CSS", "extension": ".css", "icon": "css.png", "category": "web" },
+    { "id": "json", "name": "JSON", "extension": ".json", "icon": "json.png", "category": "data" },
+    { "id": "xml", "name": "XML", "extension": ".xml", "icon": "xml.png", "category": "data" },
+    { "id": "yaml", "name": "YAML", "extension": ".yaml", "icon": "yaml.png", "category": "data" },
+    {
+      "id": "markdown",
+      "name": "Markdown",
+      "extension": ".md",
+      "icon": "markdown.png",
+      "category": "documentation"
+    },
+    { "id": "sql", "name": "SQL", "extension": ".sql", "icon": "sql.png", "category": "database" },
+    {
+      "id": "bash",
+      "name": "Bash",
+      "extension": ".sh",
+      "icon": "bash.png",
+      "category": "scripting"
+    },
+    {
+      "id": "dockerfile",
+      "name": "Dockerfile",
+      "extension": "",
+      "icon": "docker.png",
+      "category": "config"
+    },
+    {
+      "id": "nginx",
+      "name": "Nginx",
+      "extension": ".conf",
+      "icon": "nginx.png",
+      "category": "config"
+    },
+    {
+      "id": "txt",
+      "name": "Plain Text",
+      "extension": ".txt",
+      "icon": "txt.png",
+      "category": "documentation"
+    },
+    {
+      "id": "pdf",
+      "name": "PDF",
+      "extension": ".pdf",
+      "icon": "pdf.png",
+      "category": "documentation"
+    }
+  ]
+}
