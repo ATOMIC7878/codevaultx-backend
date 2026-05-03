@@ -22,12 +22,8 @@ const createTransporter = () => {
 exports.sendPasswordResetEmail = async (email, username, resetToken) => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
 
-  // Development mode - log to console (ONLY if missing credentials OR explicitly in development)
-  if (
-    !process.env.EMAIL_USER ||
-    !process.env.EMAIL_PASS ||
-    process.env.NODE_ENV === 'development'
-  ) {
+  // Development mode - log to console (ONLY if missing credentials)
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.log('📧 [DEV MODE] Password Reset Email would be sent to:', email);
     console.log('🔗 Reset Link:', resetUrl);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -99,12 +95,8 @@ exports.sendPasswordResetEmail = async (email, username, resetToken) => {
 exports.sendUsernameRecoveryEmail = async (email, username) => {
   const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/auth`;
 
-  // Development mode - log to console (ONLY if missing credentials OR explicitly in development)
-  if (
-    !process.env.EMAIL_USER ||
-    !process.env.EMAIL_PASS ||
-    process.env.NODE_ENV === 'development'
-  ) {
+  // Development mode - log to console (ONLY if missing credentials)
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.log('📧 [DEV MODE] Username Recovery Email would be sent to:', email);
     console.log('👤 Your username is:', username);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
