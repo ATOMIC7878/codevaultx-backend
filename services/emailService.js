@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+// Native fetch is built into Node.js 18+ - no require needed
 
 exports.sendPasswordResetEmail = async (email, username, resetToken) => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
