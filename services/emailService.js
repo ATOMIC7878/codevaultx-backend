@@ -1,80 +1,141 @@
-const nodemailer = require('nodemailer');
-
-const createTransporter = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn(
-      '⚠️ Email service not configured. Password reset emails will be logged to console.'
-    );
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
-    port: parseInt(process.env.EMAIL_PORT) || 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
+const fetch = require('node-fetch');
 
 exports.sendPasswordResetEmail = async (email, username, resetToken) => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
 
-  // Development mode - log to console (ONLY if missing credentials)
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  // Development mode - log to console (ONLY if missing API key)
+  if (!process.env.BREVO_API_KEY) {
     console.log('📧 [DEV MODE] Password Reset Email would be sent to:', email);
     console.log('🔗 Reset Link:', resetUrl);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     return true;
   }
 
-  const transporter = createTransporter();
-  if (!transporter) return false;
+  const apiKey = process.env.BREVO_API_KEY;
 
-  const mailOptions = {
-    from: `"CodeVaultX Security" <${process.env.EMAIL_USER}>`,
-    to: email,
+  const emailData = {
+    sender: {
+      name: 'CodeVaultX',
+      email: 'rohitrog7878@gmail.com',
+    },
+    to: [
+      {
+        email: email,
+        name: username,
+      },
+    ],
     subject: '🔐 Password Reset Request - CodeVaultX',
-    html: `
+    htmlContent: `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: 'Inter', Arial, sans-serif; line-height: 1.6; background-color: #0a0a0f; margin: 0; padding: 0; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; padding: 20px 0; }
-          .logo { font-size: 32px; font-weight: bold; background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899); -webkit-background-clip: text; background-clip: text; color: transparent; }
-          .content { background: #1a1a2e; border-radius: 16px; padding: 30px; border: 1px solid rgba(6, 182, 212, 0.2); }
-          .button { display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
-          .warning { color: #f59e0b; font-size: 12px; margin-top: 20px; }
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0a0a0f;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+          }
+          .card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          }
+          .logo {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .logo-text {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+          }
+          .logo-sub {
+            text-align: center;
+            color: #06b6d4;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-top: 5px;
+          }
+          h2 {
+            color: white;
+            margin-top: 0;
+            font-size: 24px;
+          }
+          p {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 20px;
+          }
+          .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            margin: 20px 0;
+          }
+          .link-box {
+            background: #0a0a0f;
+            padding: 12px;
+            border-radius: 12px;
+            word-break: break-all;
+            color: #06b6d4;
+            font-size: 12px;
+            font-family: monospace;
+            margin: 15px 0;
+          }
+          .warning {
+            color: #f59e0b;
+            font-size: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+          }
+          .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 11px;
+          }
         </style>
       </head>
-      <body style="background-color: #0a0a0f; margin: 0; padding: 0;">
+      <body>
         <div class="container">
-          <div class="header">
-            <div class="logo">CodeVaultX</div>
-            <p style="color: #06b6d4; margin-top: 8px;">Secure Code Snippet Management</p>
-          </div>
-          <div class="content">
-            <h2 style="color: white; margin-top: 0;">Password Reset Request</h2>
-            <p style="color: #d1d5db;">Hello <strong style="color: #06b6d4;">${username}</strong>,</p>
-            <p style="color: #d1d5db;">We received a request to reset your password. Click the button below to create a new password:</p>
-            <div style="text-align: center;">
-              <a href="${resetUrl}" class="button" style="color: white;">Reset Password</a>
+          <div class="card">
+            <div class="logo">
+              <div class="logo-text">CodeVaultX</div>
+              <div class="logo-sub">SECURE YOUR LOGIC</div>
             </div>
-            <p style="color: #d1d5db;">If the button doesn't work, copy and paste this link into your browser:</p>
-            <p style="background: #0a0a0f; padding: 12px; border-radius: 8px; word-break: break-all; color: #06b6d4; font-size: 12px;">${resetUrl}</p>
+            <h2>Password Reset Request</h2>
+            <p>Hello <strong style="color: #06b6d4;">${username}</strong>,</p>
+            <p>We received a request to reset your password. Click the button below to create a new password:</p>
+            <div style="text-align: center;">
+              <a href="${resetUrl}" class="button">Reset Password</a>
+            </div>
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <div class="link-box">${resetUrl}</div>
             <div class="warning">
               ⚠️ This link will expire in <strong>10 minutes</strong> for security reasons.
             </div>
-          </div>
-          <div class="footer">
-            <p>If you didn't request this, please ignore this email or contact support.</p>
-            <p>&copy; 2025 CodeVaultX. All rights reserved.</p>
+            <div class="footer">
+              <p>If you didn't request this, please ignore this email.</p>
+              <p>&copy; 2025 CodeVaultX. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </body>
@@ -83,9 +144,26 @@ exports.sendPasswordResetEmail = async (email, username, resetToken) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Password reset email sent to: ${email}`);
-    return true;
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': apiKey,
+      },
+      body: JSON.stringify(emailData),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log(`✅ Password reset email sent to: ${email}`);
+      console.log(`📧 Message ID: ${data.messageId}`);
+      return true;
+    } else {
+      console.error('❌ Brevo API Error:', data);
+      return false;
+    }
   } catch (error) {
     console.error('❌ Failed to send email:', error);
     return false;
@@ -95,47 +173,125 @@ exports.sendPasswordResetEmail = async (email, username, resetToken) => {
 exports.sendUsernameRecoveryEmail = async (email, username) => {
   const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/auth`;
 
-  // Development mode - log to console (ONLY if missing credentials)
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  // Development mode - log to console (ONLY if missing API key)
+  if (!process.env.BREVO_API_KEY) {
     console.log('📧 [DEV MODE] Username Recovery Email would be sent to:', email);
     console.log('👤 Your username is:', username);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     return true;
   }
 
-  const transporter = createTransporter();
-  if (!transporter) return false;
+  const apiKey = process.env.BREVO_API_KEY;
 
-  const mailOptions = {
-    from: `"CodeVaultX Security" <${process.env.EMAIL_USER}>`,
-    to: email,
+  const emailData = {
+    sender: {
+      name: 'CodeVaultX',
+      email: 'rohitrog7878@gmail.com',
+    },
+    to: [
+      {
+        email: email,
+        name: username,
+      },
+    ],
     subject: '👤 Username Reminder - CodeVaultX',
-    html: `
+    htmlContent: `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: 'Inter', Arial, sans-serif; line-height: 1.6; background-color: #0a0a0f; margin: 0; padding: 0; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; padding: 20px 0; }
-          .logo { font-size: 32px; font-weight: bold; background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899); -webkit-background-clip: text; background-clip: text; color: transparent; }
-          .content { background: #1a1a2e; border-radius: 16px; padding: 30px; border: 1px solid rgba(6, 182, 212, 0.2); }
-          .username-box { background: #0a0a0f; padding: 16px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #06b6d4; }
-          .username { font-size: 24px; font-weight: bold; color: #06b6d4; font-family: monospace; }
-          .button { display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0a0a0f;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+          }
+          .card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          }
+          .logo {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .logo-text {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+          }
+          .logo-sub {
+            text-align: center;
+            color: #06b6d4;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-top: 5px;
+          }
+          h2 {
+            color: white;
+            margin-top: 0;
+            font-size: 24px;
+          }
+          p {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 20px;
+          }
+          .username-box {
+            background: #0a0a0f;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+            border: 1px solid #06b6d4;
+          }
+          .username {
+            font-size: 28px;
+            font-weight: bold;
+            color: #06b6d4;
+            font-family: monospace;
+            letter-spacing: 2px;
+          }
+          .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            margin: 20px 0;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 11px;
+          }
         </style>
       </head>
-      <body style="background-color: #0a0a0f; margin: 0; padding: 0;">
+      <body>
         <div class="container">
-          <div class="header">
-            <div class="logo">CodeVaultX</div>
-          </div>
-          <div class="content">
-            <h2 style="color: white; margin-top: 0;">Username Reminder</h2>
-            <p style="color: #d1d5db;">Hello,</p>
-            <p style="color: #d1d5db;">You requested a reminder of your username associated with this email address.</p>
+          <div class="card">
+            <div class="logo">
+              <div class="logo-text">CodeVaultX</div>
+              <div class="logo-sub">SECURE YOUR LOGIC</div>
+            </div>
+            <h2>Username Reminder</h2>
+            <p>Hello,</p>
+            <p>You requested a reminder of your username associated with this email address.</p>
             <div class="username-box">
               <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">Your username is:</div>
               <div class="username">${username}</div>
@@ -143,10 +299,10 @@ exports.sendUsernameRecoveryEmail = async (email, username) => {
             <div style="text-align: center;">
               <a href="${loginUrl}" class="button">Login to CodeVaultX</a>
             </div>
-          </div>
-          <div class="footer">
-            <p>If you didn't request this, please ignore this email.</p>
-            <p>&copy; 2025 CodeVaultX. All rights reserved.</p>
+            <div class="footer">
+              <p>If you didn't request this, please ignore this email.</p>
+              <p>&copy; 2025 CodeVaultX. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </body>
@@ -155,9 +311,26 @@ exports.sendUsernameRecoveryEmail = async (email, username) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Username recovery email sent to: ${email}`);
-    return true;
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': apiKey,
+      },
+      body: JSON.stringify(emailData),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log(`✅ Username recovery email sent to: ${email}`);
+      console.log(`📧 Message ID: ${data.messageId}`);
+      return true;
+    } else {
+      console.error('❌ Brevo API Error:', data);
+      return false;
+    }
   } catch (error) {
     console.error('❌ Failed to send email:', error);
     return false;
