@@ -116,6 +116,10 @@ app.get('/', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../frontend/pages/upload.html'));
 // });
 
+// app.get('/document-merger', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/pages/document-merger.html'));
+// });
+
 // ============ PASSWORD RESET & USERNAME RECOVERY ROUTES (COMMENTED OUT) ============
 // app.get('/forgot-password', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../frontend/pages/forgot-password.html'));
