@@ -82,12 +82,18 @@ class AuthService {
       throw new Error('User not found');
     }
 
-    // FIX: Convert relative avatar path to absolute URL
+    // FIX: Convert relative avatar path to absolute URL using BACKEND URL
     const userObj = user.toJSON();
-    const baseUrl = process.env.FRONTEND_URL || 'https://codevaultx-api.onrender.com';
+    const baseUrl = process.env.BACKEND_URL || 'https://codevaultx-api.onrender.com';
 
     if (userObj.avatarUrl && userObj.avatarUrl.startsWith('/')) {
       userObj.avatarUrl = `${baseUrl}${userObj.avatarUrl}`;
+      userObj.avatar = userObj.avatarUrl; // Set both for consistency
+    } else if (userObj.avatarUrl && userObj.avatarUrl.includes('netlify.app')) {
+      // Fix incorrect domain if it was stored with netlify domain
+      const path = userObj.avatarUrl.split('/uploads').pop();
+      userObj.avatarUrl = `${baseUrl}/uploads${path}`;
+      userObj.avatar = userObj.avatarUrl;
     }
 
     return userObj;
