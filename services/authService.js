@@ -81,7 +81,16 @@ class AuthService {
     if (!user) {
       throw new Error('User not found');
     }
-    return user.toJSON();
+
+    // FIX: Convert relative avatar path to absolute URL
+    const userObj = user.toJSON();
+    const baseUrl = process.env.FRONTEND_URL || 'https://codevaultx-api.onrender.com';
+
+    if (userObj.avatarUrl && userObj.avatarUrl.startsWith('/')) {
+      userObj.avatarUrl = `${baseUrl}${userObj.avatarUrl}`;
+    }
+
+    return userObj;
   }
 
   // ========== PASSWORD RESET METHODS ==========

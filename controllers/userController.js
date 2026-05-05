@@ -23,10 +23,14 @@ const updateAvatar = asyncHandler(async (req, res) => {
   const avatarPath = `/uploads/avatars/${req.file.filename}`;
   const user = await userService.updateAvatar(req.user._id, avatarPath);
 
+  // FIX: Convert to absolute URL before sending to frontend
+  const baseUrl = process.env.FRONTEND_URL || 'https://codevaultx-api.onrender.com';
+  const absoluteAvatarUrl = `${baseUrl}${avatarPath}`;
+
   res.status(200).json({
     success: true,
     message: 'Avatar updated successfully',
-    data: { user, avatarUrl: avatarPath },
+    data: { user, avatarUrl: absoluteAvatarUrl },
   });
 });
 
