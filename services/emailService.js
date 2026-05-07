@@ -1,66 +1,60 @@
-// Native fetch is built into Node.js 18+ - no require needed
+const nodemailer = require('nodemailer');
 
-// Helper function to send email via Brevo API
-const sendBrevoEmail = async (emailData) => {
-  const apiKey = process.env.BREVO_API_KEY;
-
-  if (!apiKey) {
-    console.log('📧 [DEV MODE] BREVO_API_KEY missing, logging only');
-    return { success: true, isDevMode: true };
+// Create SMTP transporter using environment variables
+const createTransporter = () => {
+  // Check if SMTP password exists in environment
+  if (!process.env.SMTP_PASSWORD) {
+    console.error('❌ Missing SMTP_PASSWORD environment variable');
+    return null;
   }
 
-  try {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'api-key': apiKey,
-      },
-      body: JSON.stringify(emailData),
-    });
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER || 'a9f283001@smtp-brevo.com',
+      pass: process.env.SMTP_PASSWORD,
+    },
+    debug: true,
+    logger: true,
+  });
 
-    const data = await response.json();
-
-    if (response.ok) {
-      console.log(`✅ Email sent successfully. Message ID: ${data.messageId}`);
-      return { success: true, messageId: data.messageId };
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ SMTP connection failed:', error);
     } else {
-      console.error('❌ Brevo API Error:', JSON.stringify(data, null, 2));
-      return { success: false, error: data };
+      console.log('✅ SMTP server ready to send emails');
     }
-  } catch (error) {
-    console.error('❌ Failed to send email:', error.message);
-    return { success: false, error: error.message };
-  }
+  });
+
+  return transporter;
 };
 
+// Send password reset email
 exports.sendPasswordResetEmail = async (email, username, resetToken) => {
   const frontendUrl = process.env.FRONTEND_URL || 'https://codevaultx.netlify.app';
   const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-  // Using Brevo's default sender - works with your API key
-  const senderEmail = 'a9f283001@smtp-brevo.com';
+  const senderEmail = process.env.SMTP_USER || 'a9f283001@smtp-brevo.com';
   const senderName = 'CodeVaultX';
 
   console.log(`📧 Preparing password reset email...`);
   console.log(`📧 To: ${email}`);
   console.log(`📧 From: ${senderEmail}`);
-  console.log(`🔗 Reset link: ${resetUrl}`);
 
-  const emailData = {
-    sender: {
-      name: senderName,
-      email: senderEmail,
-    },
-    to: [
-      {
-        email: email,
-        name: username,
-      },
-    ],
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.error('❌ Cannot send email: Transporter not configured');
+    return false;
+  }
+
+  const mailOptions = {
+    from: `"${senderName}" <${senderEmail}>`,
+    to: email,
     subject: '🔐 Password Reset Request - CodeVaultX',
-    htmlContent: `
+    html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -178,22 +172,23 @@ exports.sendPasswordResetEmail = async (email, username, resetToken) => {
     `,
   };
 
-  const result = await sendBrevoEmail(emailData);
-
-  if (result.success) {
+  try {
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Password reset email sent to: ${email}`);
+    console.log(`📧 Message ID: ${info.messageId}`);
     return true;
-  } else {
-    console.error(`❌ Failed to send password reset email to: ${email}`);
+  } catch (error) {
+    console.error('❌ Failed to send email:', error.message);
     return false;
   }
 };
 
+// Send username recovery email
 exports.sendUsernameRecoveryEmail = async (email, username) => {
   const frontendUrl = process.env.FRONTEND_URL || 'https://codevaultx.netlify.app';
   const loginUrl = `${frontendUrl}/auth`;
 
-  const senderEmail = 'a9f283001@smtp-brevo.com';
+  const senderEmail = process.env.SMTP_USER || 'a9f283001@smtp-brevo.com';
   const senderName = 'CodeVaultX';
 
   console.log(`📧 Preparing username recovery email...`);
@@ -201,19 +196,18 @@ exports.sendUsernameRecoveryEmail = async (email, username) => {
   console.log(`📧 From: ${senderEmail}`);
   console.log(`👤 Username: ${username}`);
 
-  const emailData = {
-    sender: {
-      name: senderName,
-      email: senderEmail,
-    },
-    to: [
-      {
-        email: email,
-        name: username,
-      },
-    ],
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.error('❌ Cannot send email: Transporter not configured');
+    return false;
+  }
+
+  const mailOptions = {
+    from: `"${senderName}" <${senderEmail}>`,
+    to: email,
     subject: '👤 Username Reminder - CodeVaultX',
-    htmlContent: `
+    html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -328,13 +322,13 @@ exports.sendUsernameRecoveryEmail = async (email, username) => {
     `,
   };
 
-  const result = await sendBrevoEmail(emailData);
-
-  if (result.success) {
+  try {
+    const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Username recovery email sent to: ${email}`);
+    console.log(`📧 Message ID: ${info.messageId}`);
     return true;
-  } else {
-    console.error(`❌ Failed to send username recovery email to: ${email}`);
+  } catch (error) {
+    console.error('❌ Failed to send email:', error.message);
     return false;
   }
 };
