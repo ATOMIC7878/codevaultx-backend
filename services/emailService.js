@@ -39,18 +39,19 @@ exports.sendPasswordResetEmail = async (email, username, resetToken) => {
   const frontendUrl = process.env.FRONTEND_URL || 'https://codevaultx.netlify.app';
   const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-  // ✅ Using Brevo API - sender is automatically set by Brevo
-  // The API key determines the sender, no need to specify a verified email
+  // Using Brevo's default sender - works with your API key
+  const senderEmail = 'a9f283001@smtp-brevo.com';
   const senderName = 'CodeVaultX';
 
   console.log(`📧 Preparing password reset email...`);
   console.log(`📧 To: ${email}`);
+  console.log(`📧 From: ${senderEmail}`);
   console.log(`🔗 Reset link: ${resetUrl}`);
 
   const emailData = {
     sender: {
       name: senderName,
-      email: undefined, // Let Brevo use its default sender
+      email: senderEmail,
     },
     to: [
       {
@@ -192,16 +193,18 @@ exports.sendUsernameRecoveryEmail = async (email, username) => {
   const frontendUrl = process.env.FRONTEND_URL || 'https://codevaultx.netlify.app';
   const loginUrl = `${frontendUrl}/auth`;
 
+  const senderEmail = 'a9f283001@smtp-brevo.com';
   const senderName = 'CodeVaultX';
 
   console.log(`📧 Preparing username recovery email...`);
   console.log(`📧 To: ${email}`);
+  console.log(`📧 From: ${senderEmail}`);
   console.log(`👤 Username: ${username}`);
 
   const emailData = {
     sender: {
       name: senderName,
-      email: undefined, // Let Brevo use its default sender
+      email: senderEmail,
     },
     to: [
       {
