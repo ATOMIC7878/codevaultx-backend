@@ -1,22 +1,56 @@
 // Native fetch is built into Node.js 18+ - no require needed
 
-exports.sendPasswordResetEmail = async (email, username, resetToken) => {
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+// Helper function to send email via Brevo API
+const sendBrevoEmail = async (emailData) => {
+  const apiKey = process.env.BREVO_API_KEY;
 
-  // Development mode - log to console (ONLY if missing API key)
-  if (!process.env.BREVO_API_KEY) {
-    console.log('📧 [DEV MODE] Password Reset Email would be sent to:', email);
-    console.log('🔗 Reset Link:', resetUrl);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    return true;
+  if (!apiKey) {
+    console.log('📧 [DEV MODE] BREVO_API_KEY missing, logging only');
+    return { success: true, isDevMode: true };
   }
 
-  const apiKey = process.env.BREVO_API_KEY;
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': apiKey,
+      },
+      body: JSON.stringify(emailData),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log(`✅ Email sent successfully. Message ID: ${data.messageId}`);
+      return { success: true, messageId: data.messageId };
+    } else {
+      console.error('❌ Brevo API Error:', JSON.stringify(data, null, 2));
+      return { success: false, error: data };
+    }
+  } catch (error) {
+    console.error('❌ Failed to send email:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+exports.sendPasswordResetEmail = async (email, username, resetToken) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'https://codevaultx.netlify.app';
+  const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+  // ✅ Using Brevo API - sender is automatically set by Brevo
+  // The API key determines the sender, no need to specify a verified email
+  const senderName = 'CodeVaultX';
+
+  console.log(`📧 Preparing password reset email...`);
+  console.log(`📧 To: ${email}`);
+  console.log(`🔗 Reset link: ${resetUrl}`);
 
   const emailData = {
     sender: {
-      name: 'CodeVaultX',
-      email: 'rohitrog7878@gmail.com',
+      name: senderName,
+      email: undefined, // Let Brevo use its default sender
     },
     to: [
       {
@@ -143,50 +177,31 @@ exports.sendPasswordResetEmail = async (email, username, resetToken) => {
     `,
   };
 
-  try {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'api-key': apiKey,
-      },
-      body: JSON.stringify(emailData),
-    });
+  const result = await sendBrevoEmail(emailData);
 
-    const data = await response.json();
-
-    if (response.ok) {
-      console.log(`✅ Password reset email sent to: ${email}`);
-      console.log(`📧 Message ID: ${data.messageId}`);
-      return true;
-    } else {
-      console.error('❌ Brevo API Error:', data);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Failed to send email:', error);
+  if (result.success) {
+    console.log(`✅ Password reset email sent to: ${email}`);
+    return true;
+  } else {
+    console.error(`❌ Failed to send password reset email to: ${email}`);
     return false;
   }
 };
 
 exports.sendUsernameRecoveryEmail = async (email, username) => {
-  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/auth`;
+  const frontendUrl = process.env.FRONTEND_URL || 'https://codevaultx.netlify.app';
+  const loginUrl = `${frontendUrl}/auth`;
 
-  // Development mode - log to console (ONLY if missing API key)
-  if (!process.env.BREVO_API_KEY) {
-    console.log('📧 [DEV MODE] Username Recovery Email would be sent to:', email);
-    console.log('👤 Your username is:', username);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    return true;
-  }
+  const senderName = 'CodeVaultX';
 
-  const apiKey = process.env.BREVO_API_KEY;
+  console.log(`📧 Preparing username recovery email...`);
+  console.log(`📧 To: ${email}`);
+  console.log(`👤 Username: ${username}`);
 
   const emailData = {
     sender: {
-      name: 'CodeVaultX',
-      email: 'rohitrog7878@gmail.com',
+      name: senderName,
+      email: undefined, // Let Brevo use its default sender
     },
     to: [
       {
@@ -310,29 +325,13 @@ exports.sendUsernameRecoveryEmail = async (email, username) => {
     `,
   };
 
-  try {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'api-key': apiKey,
-      },
-      body: JSON.stringify(emailData),
-    });
+  const result = await sendBrevoEmail(emailData);
 
-    const data = await response.json();
-
-    if (response.ok) {
-      console.log(`✅ Username recovery email sent to: ${email}`);
-      console.log(`📧 Message ID: ${data.messageId}`);
-      return true;
-    } else {
-      console.error('❌ Brevo API Error:', data);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Failed to send email:', error);
+  if (result.success) {
+    console.log(`✅ Username recovery email sent to: ${email}`);
+    return true;
+  } else {
+    console.error(`❌ Failed to send username recovery email to: ${email}`);
     return false;
   }
 };
